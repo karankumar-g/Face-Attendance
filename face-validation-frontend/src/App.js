@@ -7,7 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/add-person" element={<AddPerson />} />
+        <Route path="/" element={<AddPerson />} />
         <Route path="/validate-person" element={<ValidatePerson />} />
       </Routes>
     </Router>

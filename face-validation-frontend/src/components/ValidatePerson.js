@@ -80,7 +80,7 @@ const ValidatePerson = () => {
                 bottom: "20px",
                 right: "20px",
               }}
-              onClick={() => navigate("/add-person")}
+              onClick={() => navigate("/")}
             >
               Add Person
             </Button>
