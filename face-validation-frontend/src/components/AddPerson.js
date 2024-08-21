@@ -17,9 +17,11 @@ import { useNavigate } from "react-router-dom";
 const AddPerson = () => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
-  const [className, setClassName] = useState("");
+  const [year, setYear] = useState("");
   const [department, setDepartment] = useState("");
   const [rollNo, setRollNo] = useState("");
+  const [imageSrc, setImageSrc] = useState(null);
+  const [isCaptured, setIsCaptured] = useState(false); // To toggle between webcam and captured image
   const webcamRef = React.useRef(null);
   const navigate = useNavigate();
 
@@ -34,36 +36,48 @@ const AddPerson = () => {
     return new File([new Uint8Array(array)], filename, { type: mime });
   };
 
-  const capture = async () => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (imageSrc) {
-      try {
-        const file = base64ToFile(imageSrc, "face_image.jpg");
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("age", age);
-        formData.append("class_name", className);
-        formData.append("department", department);
-        formData.append("roll_no", rollNo);
-        formData.append("face_image", file);
-
-        const response = await axios.post(
-          "http://localhost:8000/api/add/",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        alert("Person added successfully!");
-        console.log("Response:", response.data); // Log response for debugging
-      } catch (error) {
-        console.error("Error adding person:", error);
-        alert("Error adding person. Check the console for details.");
-      }
+  const capture = () => {
+    if (isCaptured) {
+      // If already captured, allow recapture
+      setIsCaptured(false);
+      setImageSrc(null);
     } else {
-      alert("No image captured");
+      const capturedImage = webcamRef.current.getScreenshot();
+      setImageSrc(capturedImage);
+      setIsCaptured(true);
+    }
+  };
+
+  const saveDetails = async () => {
+    if (!imageSrc) {
+      alert("Please capture the face image first!");
+      return;
+    }
+
+    try {
+      const file = base64ToFile(imageSrc, "face_image.jpg");
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("age", age);
+      formData.append("year", year);
+      formData.append("department", department);
+      formData.append("roll_no", rollNo);
+      formData.append("face_image", file);
+
+      const response = await axios.post(
+        "http://localhost:8000/api/add/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      alert("Person details and face image saved successfully!");
+      console.log("Response:", response.data);
+    } catch (error) {
+      console.error("Error saving details:", error);
+      alert("Error saving details. Check the console for details.");
     }
   };
 
@@ -72,40 +86,112 @@ const AddPerson = () => {
   };
 
   return (
-    <Container>
-      <Grid container spacing={3} style={{ marginTop: "20px" }}>
+    <Container maxWidth="lg">
+      <Box display="flex" justifyContent="flex-end" mb={0.5} mt={0.5}>
+        <Button
+          variant="contained"
+          style={{
+            backgroundColor: "#673ab7",
+            color: "white",
+            padding: "10px 20px",
+          }}
+          onClick={handleTakeAttendance}
+        >
+          Take Attendance
+        </Button>
+      </Box>
+      <Grid container spacing={4} style={{ marginTop: "0px" }}>
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} style={{ padding: "20px" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              style={{ marginBottom: "20px" }}
-              onClick={handleTakeAttendance}
+          <Paper
+            elevation={6}
+            style={{
+              padding: "20px",
+              backgroundColor: "#f3f4f6",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              style={{
+                color: "#3f51b5",
+                marginBottom: "10px", // Reduced the margin below the heading
+              }}
             >
-              Take Attendance
-            </Button>
-            <Typography variant="h5" gutterBottom>
               Add Person
             </Typography>
             <Box
               display="flex"
-              justifyContent="center"
+              flexDirection="column"
               alignItems="center"
-              style={{ minHeight: "400px" }}
+              justifyContent="center" // Centering horizontally and vertically
+              style={{ minHeight: "400px", marginTop: "0px" }} // Reduced margin at the top
             >
-              <Webcam
-                ref={webcamRef}
-                mirrored={true}
-                screenshotFormat="image/jpeg"
-                style={{ width: "100%", maxWidth: "400px" }}
-              />
+              {isCaptured ? (
+                <img
+                  src={imageSrc}
+                  alt="Captured"
+                  style={{
+                    width: "100%",
+                    maxWidth: "400px",
+                    borderRadius: "10px",
+                    border: "3px solid #3f51b5",
+                  }}
+                />
+              ) : (
+                <Webcam
+                  ref={webcamRef}
+                  mirrored={true}
+                  screenshotFormat="image/jpeg"
+                  style={{
+                    width: "100%",
+                    maxWidth: "400px",
+                    borderRadius: "10px",
+                    border: "3px solid #3f51b5",
+                  }}
+                />
+              )}
+              <Typography
+                variant="body2"
+                style={{
+                  marginTop: "10px",
+                  color: "#f50057",
+                }}
+              >
+                * Make sure you have good lighting for better recognition.
+              </Typography>
+              <Button
+                variant="contained"
+                fullWidth
+                style={{
+                  marginTop: "20px",
+                  backgroundColor: "#3f51b5",
+                  color: "white",
+                }}
+                onClick={capture}
+              >
+                {isCaptured ? "Recapture" : "Capture Face"}
+              </Button>
             </Box>
           </Paper>
         </Grid>
+
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} style={{ padding: "20px" }}>
-            <Typography variant="h5" gutterBottom>
+          <Paper
+            elevation={6}
+            style={{
+              padding: "20px",
+              backgroundColor: "#f9fbe7",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography variant="h5" gutterBottom style={{ color: "#388e3c" }}>
               Person Details
             </Typography>
             <TextField
@@ -116,7 +202,9 @@ const AddPerson = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               InputProps={{
-                startAdornment: <Person style={{ marginRight: "8px" }} />,
+                startAdornment: (
+                  <Person style={{ marginRight: "8px", color: "#9c27b0" }} />
+                ),
               }}
             />
             <TextField
@@ -128,18 +216,22 @@ const AddPerson = () => {
               value={age}
               onChange={(e) => setAge(e.target.value)}
               InputProps={{
-                startAdornment: <Numbers style={{ marginRight: "8px" }} />,
+                startAdornment: (
+                  <Numbers style={{ marginRight: "8px", color: "#ff5722" }} />
+                ),
               }}
             />
             <TextField
               fullWidth
-              label="Class"
+              label="Year"
               variant="outlined"
               margin="normal"
-              value={className}
-              onChange={(e) => setClassName(e.target.value)}
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
               InputProps={{
-                startAdornment: <School style={{ marginRight: "8px" }} />,
+                startAdornment: (
+                  <School style={{ marginRight: "8px", color: "#2196f3" }} />
+                ),
               }}
             />
             <TextField
@@ -150,7 +242,9 @@ const AddPerson = () => {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               InputProps={{
-                startAdornment: <Domain style={{ marginRight: "8px" }} />,
+                startAdornment: (
+                  <Domain style={{ marginRight: "8px", color: "#4caf50" }} />
+                ),
               }}
             />
             <TextField
@@ -161,17 +255,23 @@ const AddPerson = () => {
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
               InputProps={{
-                startAdornment: <Class style={{ marginRight: "8px" }} />,
+                startAdornment: (
+                  <Class style={{ marginRight: "8px", color: "#ffc107" }} />
+                ),
               }}
             />
             <Button
               variant="contained"
-              color="primary"
               fullWidth
-              style={{ marginTop: "20px" }}
-              onClick={capture}
+              style={{
+                marginTop: "20px",
+                backgroundColor: "#ff9800",
+                color: "white",
+                backgroundColor: "blue",
+              }}
+              onClick={saveDetails}
             >
-              Capture & Save
+              Save Details
             </Button>
           </Paper>
         </Grid>
