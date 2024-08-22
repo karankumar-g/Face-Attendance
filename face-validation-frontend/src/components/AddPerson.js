@@ -38,7 +38,6 @@ const AddPerson = () => {
 
   const capture = () => {
     if (isCaptured) {
-      // If already captured, allow recapture
       setIsCaptured(false);
       setImageSrc(null);
     } else {
@@ -144,7 +143,7 @@ const AddPerson = () => {
               ) : (
                 <Webcam
                   ref={webcamRef}
-                  mirrored={true}
+                  // mirrored={true}
                   screenshotFormat="image/jpeg"
                   style={{
                     width: "100%",

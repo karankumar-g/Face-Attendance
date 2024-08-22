@@ -14,6 +14,7 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Box,
 } from "@mui/material";
 import { CameraAlt, Clear, Person, Class } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +53,16 @@ const ValidatePerson = () => {
             },
           }
         );
-        setPeople((prevPeople) => [...prevPeople, response.data]); // Append the new person to the list
+
+        const personExists = people.some(
+          (person) => person.roll_no === response.data.roll_no
+        );
+
+        if (personExists) {
+          alert("This person is already in the list.");
+        } else {
+          setPeople((prevPeople) => [...prevPeople, response.data]);
+        }
       } catch (error) {
         console.error("Error validating person:", error);
         alert("No match found!");
@@ -64,59 +74,50 @@ const ValidatePerson = () => {
 
   const clearTable = () => setPeople([]);
 
+  const handleAddPerson = () => {
+    navigate("/");
+  };
+
   return (
-    <Container>
-      <Grid container spacing={3} style={{ marginTop: "20px" }}>
-        <Grid item xs={12} md={6} style={{ position: "relative" }}>
-          <Paper elevation={3} style={{ padding: "20px" }}>
-            <Typography variant="h5" gutterBottom>
-              Validate Person
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              style={{
-                position: "absolute",
-                bottom: "20px",
-                right: "20px",
-              }}
-              onClick={() => navigate("/")}
-            >
-              Add Person
-            </Button>
-            <Webcam
-              ref={webcamRef}
-              mirrored={true}
-              screenshotFormat="image/jpeg"
-              style={{ width: "100%", maxWidth: "400px", marginBottom: "20px" }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              style={{ marginBottom: "10px" }}
-              onClick={capture}
-              startIcon={<CameraAlt />}
-            >
-              Capture & Validate
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              style={{ marginBottom: "10px", marginLeft: "10px" }}
-              onClick={clearTable}
-              startIcon={<Clear />}
-            >
-              Clear Table
-            </Button>
-          </Paper>
-        </Grid>
+    <Container maxWidth="lg">
+      <Box display="flex" justifyContent="flex-end" mb={0.5} mt={0.5}>
+        <Button
+          variant="contained"
+          style={{
+            backgroundColor: "#673ab7",
+            color: "white",
+            padding: "10px 20px",
+          }}
+          onClick={handleAddPerson}
+        >
+          Add Person
+        </Button>
+      </Box>
+      <Grid container spacing={4} style={{ marginTop: "0px" }}>
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} style={{ padding: "20px" }}>
-            <Typography variant="h5" gutterBottom>
+          <Paper
+            elevation={6}
+            style={{
+              padding: "20px",
+              backgroundColor: "#f9fbe7",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              height: "100%",
+            }}
+          >
+            <Typography variant="h5" gutterBottom style={{ color: "#388e3c" }}>
               Person Details
             </Typography>
-            <TableContainer component={Paper}>
-              <Table>
+            <TableContainer
+              component={Paper}
+              style={{
+                maxHeight: "400px",
+                overflowY: "auto",
+                flexGrow: 1,
+              }}
+            >
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
                     <TableCell>S.No</TableCell>
@@ -151,6 +152,75 @@ const ValidatePerson = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper
+            elevation={6}
+            style={{
+              padding: "20px",
+              backgroundColor: "#f3f4f6",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              style={{
+                color: "#3f51b5",
+                marginBottom: "10px",
+              }}
+            >
+              Validate Person
+            </Typography>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              style={{ minHeight: "400px", marginTop: "0px" }}
+            >
+              <Webcam
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                style={{
+                  width: "100%",
+                  maxWidth: "400px",
+                  borderRadius: "10px",
+                  border: "3px solid #3f51b5",
+                }}
+              />
+              <Button
+                variant="contained"
+                fullWidth
+                style={{
+                  marginTop: "20px",
+                  backgroundColor: "#3f51b5",
+                  color: "white",
+                }}
+                onClick={capture}
+                startIcon={<CameraAlt />}
+              >
+                Capture & Validate
+              </Button>
+              <Button
+                variant="outlined"
+                fullWidth
+                style={{
+                  marginTop: "10px",
+                  color: "#f50057",
+                  borderColor: "#f50057",
+                }}
+                onClick={clearTable}
+                startIcon={<Clear />}
+              >
+                Clear Table
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>

@@ -4,7 +4,7 @@ from django.db import models
 class Person(models.Model):
     name = models.CharField(max_length=100)
     age = models.IntegerField()
-    class_name = models.CharField(max_length=50)
+    year = models.CharField(max_length=50)
     department = models.CharField(max_length=50)
     roll_no = models.CharField(max_length=50, unique=True)
     face_encoding = models.TextField()

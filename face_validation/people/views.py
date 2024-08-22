@@ -15,12 +15,12 @@ def add_person(request):
     if request.method == 'POST':
         name = request.data.get('name')
         age = request.data.get('age')
-        class_name = request.data.get('class_name')
+        year = request.data.get('year')
         department = request.data.get('department')
         roll_no = request.data.get('roll_no')
         face_image = request.FILES.get('face_image')
 
-        if not all([name, age, class_name, department, roll_no, face_image]):
+        if not all([name, age, year, department, roll_no, face_image]):
             return Response({'message': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -38,7 +38,7 @@ def add_person(request):
             person = Person(
                 name=name,
                 age=age,
-                class_name=class_name,
+                year=year,
                 department=department,
                 roll_no=roll_no,
                 face_encoding=encoding_str
