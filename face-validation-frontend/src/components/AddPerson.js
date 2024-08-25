@@ -21,7 +21,7 @@ const AddPerson = () => {
   const [department, setDepartment] = useState("");
   const [rollNo, setRollNo] = useState("");
   const [imageSrc, setImageSrc] = useState(null);
-  const [isCaptured, setIsCaptured] = useState(false); // To toggle between webcam and captured image
+  const [isCaptured, setIsCaptured] = useState(false);
   const webcamRef = React.useRef(null);
   const navigate = useNavigate();
 
