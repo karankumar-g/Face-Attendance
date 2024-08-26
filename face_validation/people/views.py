@@ -5,7 +5,8 @@ from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Person
+from .models import Person, Session, Attendance
+import uuid
 import face_recognition
 import io
 
@@ -54,11 +55,14 @@ def add_person(request):
 def validate_person(request):
     if request.method == 'POST':
         face_image = request.FILES.get('face_image')
+        session_id = request.data.get('session_id')
 
-        if not face_image:
-            return Response({'message': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+        if not face_image or not session_id:
+            return Response({'message': 'Image and session ID are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            session = Session.objects.get(session_id=session_id)
+
             image_data = face_image.read()
             image = np.asarray(bytearray(image_data), dtype=np.uint8)
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
@@ -80,12 +84,17 @@ def validate_person(request):
                 stored_encoding_list = json.loads(stored_encoding_str)
 
                 if compare_encodings(stored_encoding_list, recognized_face_encoding_list):
+                    Attendance.objects.create(person=person, session=session)
+
                     return Response({
+                        'message': f'Attendance marked for {person.name} in session {session.session_name}',
                         'name': person.name,
                         'roll_no': person.roll_no,
                     }, status=status.HTTP_200_OK)
 
             return Response({'message': 'No match found!'}, status=status.HTTP_404_NOT_FOUND)
+        except Session.DoesNotExist:
+            return Response({'message': 'Invalid session ID'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -111,3 +120,41 @@ def compare_encodings(stored_encoding_list, recognized_face_encoding_list, toler
     matches = face_recognition.compare_faces(
         [stored_encoding_list], recognized_face_encoding_np, tolerance=tolerance)
     return any(matches)
+
+
+@api_view(['POST'])
+def create_session(request):
+    session_name = request.data.get('session_name')
+
+    if not session_name:
+        return Response({'message': 'Session name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    session_id = str(uuid.uuid4())
+    session = Session.objects.create(
+        session_name=session_name, session_id=session_id)
+
+    return Response({'message': 'Session created successfully', 'session_id': session.session_id}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+def list_sessions(request):
+    sessions = Session.objects.all()
+    session_data = [{'session_name': s.session_name,
+                     'session_id': s.session_id, 'created_at': s.created_at} for s in sessions]
+
+    return Response(session_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_attendance(request, session_id):
+    try:
+        session = Session.objects.get(session_id=session_id)
+        attendance_records = Attendance.objects.filter(session=session)
+        attendance_data = [
+            {'person': record.person.name, 'timestamp': record.timestamp}
+            for record in attendance_records
+        ]
+
+        return Response(attendance_data, status=status.HTTP_200_OK)
+    except Session.DoesNotExist:
+        return Response({'message': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
